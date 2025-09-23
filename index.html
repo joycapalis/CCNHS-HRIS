@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CCNHS HRIS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-image: url('citihigh.jpg'); /* This line adds the image */
+            background-size: cover; /* This makes the image fill the screen */
+            background-attachment: fixed; /* This keeps the image from scrolling with content */
+            background-position: center; /* This centers the image */
+            color: white; /* Changed font color for readability */
+            text-shadow: 2px 2px 4px #000000; /* Added shadow for readability */
+        }
+
+        h1 { text-align: center; }
+        .form-container, .list-container {
+            background: rgba(255, 255, 255, 0.8); /* Added a semi-transparent white background to improve readability of form content */
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            color: black; /* Changed font color inside containers to black */
+            text-shadow: none; /* Removed text shadow inside containers */
+        }
+        label { display: block; margin-top: 10px; }
+        input, select, button { margin-top: 5px; padding: 8px; width: 100%; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #007bff; color: white; }
+        .actions button { margin-right: 5px; }
+
+        /* Modal Styles */
+        #employeeModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 70%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            scroll-behavior: smooth;
+            color: black; /* Changed font color inside modal to black */
+            text-shadow: none; /* Removed text shadow inside modal */
+        }
+
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: #007bff;
+            border-radius: 8px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: #0056b3;
+        }
+
+        .close { position:absolute; top:10px; right:15px; cursor:pointer; font-size:20px;}
+        .training-form { margin-top: 20px; padding: 10px; border: 1px solid #ddd; border-radius: 8px;}
+        .search-bar { margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <h1>CCNHS HRIS</h1>
+
+    <div class="form-container">
+        <h2 id="formTitle">Add Employee</h2>
+        <form id="employeeForm">
+            <input type="hidden" id="employeeId">
+            <label>Full Name: <input type="text" id="name" required></label>
+            <label>Position Type:
+                <select id="positionType" required>
+                    <option value="Teaching">Teaching</option>
+                    <option value="Non-Teaching">Non-Teaching</option>
+                </select>
+            </label>
+            <label>Job Title: <input type="text" id="position" required></label>
+            <label>Department: <input type="text" id="department" required></label>
+            <label>Date Hired: <input type="date" id="dateHired" required></label>
+            <label>Contact Number: <input type="text" id="contact"></label>
+            <label>Email: <input type="email" id="email"></label>
+            <label>Address: <input type="text" id="address"></label>
+            <button type="submit">Save Employee</button>
+        </form>
+    </div>
+
+    <div class="list-container">
+        <h2>Employee List</h2>
+        <input type="text" id="searchInput" class="search-bar" placeholder="Search employee...">
+        <table id="employeeTable">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Position Type</th>
+                    <th>Job Title</th>
+                    <th>Department</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="employeeModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Employee Profile</h2>
+            <div id="employeeDetails"></div>
+
+            <div class="training-form">
+                <h3>Training Records</h3>
+                <form id="trainingForm">
+                    <input type="hidden" id="trainingEmployeeId">
+                    <input type="hidden" id="trainingId">
+                    <label>Training Title: <input type="text" id="trainingTitle" required></label>
+                    <label>Start Date: <input type="date" id="trainingStartDate" required></label>
+                    <label>End Date: <input type="date" id="trainingEndDate" required></label>
+                    <label>Organizer: <input type="text" id="trainingOrganizer" required></label>
+                    <label>Status:
+                        <select id="trainingStatus" required>
+                            <option value="Completed">Completed</option>
+                            <option value="Ongoing">Ongoing</option>
+                        </select>
+                    </label>
+                    <button type="submit">Add/Update Training</button>
+                </form>
+                <table id="trainingTable">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Organizer</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="training-form">
+                <h3>Promotion Records</h3>
+                <form id="promotionForm">
+                    <input type="hidden" id="promotionEmployeeId">
+                    <input type="hidden" id="promotionId">
+                    <label>Promotion Title / New Position: <input type="text" id="promotionTitle" required></label>
+                    <label>Promotion Date: <input type="date" id="promotionDate" required></label>
+                    <button type="submit">Add/Update Promotion</button>
+                </form>
+                <table id="promotionTable">
+                    <thead>
+                        <tr>
+                            <th>New Position</th>
+                            <th>Promotion Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDLSIfMhSeJIp85opWgBz-F6DgQN1WdPaU",
+            authDomain: "hris-af75a.firebaseapp.com",
+            projectId: "hris-af75a",
+            storageBucket: "hris-af75a.firebasestorage.app",
+            messagingSenderId: "1050349285701",
+            appId: "1:1050349285701:web:2ba2c29572de543ade8e2c",
+            measurementId: "G-6ZKY0ZEK13"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const employeeForm = document.getElementById("employeeForm");
+        const employeeTable = document.querySelector("#employeeTable tbody");
+        const searchInput = document.getElementById("searchInput");
+        const modal = document.getElementById("employeeModal");
+        const employeeDetails = document.getElementById("employeeDetails");
+        const trainingForm = document.getElementById("trainingForm");
+        const trainingTable = document.querySelector("#trainingTable tbody");
+        const promotionForm = document.getElementById("promotionForm");
+        const promotionTable = document.querySelector("#promotionTable tbody");
+        let employees = [];
+
+        const employeesRef = collection(db, "employees");
+        onSnapshot(employeesRef, (snapshot) => {
+            employees = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderEmployees(employees);
+        });
+
+        employeeForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const id = document.getElementById("employeeId").value;
+            const data = {
+                name: document.getElementById("name").value,
+                positionType: document.getElementById("positionType").value,
+                position: document.getElementById("position").value,
+                department: document.getElementById("department").value,
+                dateHired: document.getElementById("dateHired").value,
+                contact: document.getElementById("contact").value,
+                email: document.getElementById("email").value,
+                address: document.getElementById("address").value
+            };
+            if (id) await updateDoc(doc(db, "employees", id), data);
+            else await addDoc(collection(db, "employees"), data);
+            employeeForm.reset();
+            document.getElementById("formTitle").textContent = "Add Employee";
+            document.getElementById("employeeId").value = "";
+        });
+
+        function renderEmployees(list) {
+            const searchTerm = searchInput.value.toLowerCase();
+            employeeTable.innerHTML = "";
+            list.filter(emp =>
+                emp.name.toLowerCase().includes(searchTerm) ||
+                emp.department.toLowerCase().includes(searchTerm) ||
+                emp.positionType.toLowerCase().includes(searchTerm)
+            ).forEach(emp => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${emp.name}</td>
+                    <td>${emp.positionType}</td>
+                    <td>${emp.position}</td>
+                    <td>${emp.department}</td>
+                    <td class="actions">
+                        <button onclick="viewEmployee('${emp.id}')">View</button>
+                        <button onclick="editEmployee('${emp.id}')">Edit</button>
+                        <button onclick="deleteEmployee('${emp.id}')">Delete</button>
+                    </td>`;
+                employeeTable.appendChild(row);
+            });
+        }
+
+        window.viewEmployee = (id) => {
+            const emp = employees.find(e => e.id === id);
+            if (!emp) return;
+            employeeDetails.innerHTML = `
+                <p><b>Name:</b> ${emp.name}</p>
+                <p><b>Position Type:</b> ${emp.positionType}</p>
+                <p><b>Job Title:</b> ${emp.position}</p>
+                <p><b>Department:</b> ${emp.department}</p>
+                <p><b>Date Hired:</b> ${emp.dateHired}</p>
+                <p><b>Contact:</b> ${emp.contact}</p>
+                <p><b>Email:</b> ${emp.email}</p>
+                <p><b>Address:</b> ${emp.address}</p>`;
+            document.getElementById("trainingEmployeeId").value = id;
+            document.getElementById("promotionEmployeeId").value = id;
+            loadTrainings(id);
+            loadPromotions(id);
+            modal.style.display = "block";
+        };
+
+        window.closeModal = () => { modal.style.display = "none"; };
+
+        window.editEmployee = (id) => {
+            const emp = employees.find(e => e.id === id);
+            if (!emp) return;
+            document.getElementById("formTitle").textContent = "Edit Employee";
+            document.getElementById("employeeId").value = id;
+            document.getElementById("name").value = emp.name;
+            document.getElementById("positionType").value = emp.positionType;
+            document.getElementById("position").value = emp.position;
+            document.getElementById("department").value = emp.department;
+            document.getElementById("dateHired").value = emp.dateHired;
+            document.getElementById("contact").value = emp.contact;
+            document.getElementById("email").value = emp.email;
+            document.getElementById("address").value = emp.address;
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        };
+
+        window.deleteEmployee = async (id) => {
+            if (confirm("Delete this employee?")) await deleteDoc(doc(db, "employees", id));
+        };
+
+        searchInput.addEventListener("input", () => renderEmployees(employees));
+
+        // Training handlers
+        trainingForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const empId = document.getElementById("trainingEmployeeId").value;
+            const trainingId = document.getElementById("trainingId").value;
+            const trainingData = {
+                title: document.getElementById("trainingTitle").value,
+                startDate: document.getElementById("trainingStartDate").value,
+                endDate: document.getElementById("trainingEndDate").value,
+                organizer: document.getElementById("trainingOrganizer").value,
+                status: document.getElementById("trainingStatus").value
+            };
+            if (trainingId) await updateDoc(doc(db, "employees", empId, "trainings", trainingId), trainingData);
+            else await addDoc(collection(db, "employees", empId, "trainings"), trainingData);
+            trainingForm.reset();
+            document.getElementById("trainingId").value = "";
+        });
+
+        function loadTrainings(empId) {
+            const trainingsRef = collection(db, "employees", empId, "trainings");
+            onSnapshot(trainingsRef, (snapshot) => {
+                trainingTable.innerHTML = "";
+                snapshot.forEach(docSnap => {
+                    const tr = docSnap.data();
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${tr.title}</td>
+                        <td>${tr.startDate}</td>
+                        <td>${tr.endDate}</td>
+                        <td>${tr.organizer}</td>
+                        <td>${tr.status}</td>
+                        <td>
+                            <button onclick="editTraining('${empId}', '${docSnap.id}')">Edit</button>
+                            <button onclick="deleteTraining('${empId}', '${docSnap.id}')">Delete</button>
+                        </td>`;
+                    trainingTable.appendChild(row);
+                });
+            });
+        }
+
+        window.editTraining = (empId, trainingId) => {
+            const trainingRef = doc(db, "employees", empId, "trainings", trainingId);
+            onSnapshot(trainingRef, (docSnap) => {
+                const tr = docSnap.data();
+                document.getElementById("trainingTitle").value = tr.title;
+                document.getElementById("trainingStartDate").value = tr.startDate;
+                document.getElementById("trainingEndDate").value = tr.endDate;
+                document.getElementById("trainingOrganizer").value = tr.organizer;
+                document.getElementById("trainingStatus").value = tr.status;
+                document.getElementById("trainingId").value = trainingId;
+            });
+        };
+
+        window.deleteTraining = async (empId, trainingId) => {
+            if (confirm("Delete this training record?")) await deleteDoc(doc(db, "employees", empId, "trainings", trainingId));
+        };
+
+        // Promotion handlers
+        promotionForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const empId = document.getElementById("promotionEmployeeId").value;
+            const promotionId = document.getElementById("promotionId").value;
+            const promotionData = {
+                title: document.getElementById("promotionTitle").value,
+                date: document.getElementById("promotionDate").value
+            };
+            if (promotionId) await updateDoc(doc(db, "employees", empId, "promotions", promotionId), promotionData);
+            else await addDoc(collection(db, "employees", empId, "promotions"), promotionData);
+            promotionForm.reset();
+            document.getElementById("promotionId").value = "";
+        });
+
+        function loadPromotions(empId) {
+            const promotionsRef = collection(db, "employees", empId, "promotions");
+            onSnapshot(promotionsRef, (snapshot) => {
+                promotionTable.innerHTML = "";
+                snapshot.forEach(docSnap => {
+                    const pr = docSnap.data();
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${pr.title}</td>
+                        <td>${pr.date}</td>
+                        <td>
+                            <button onclick="editPromotion('${empId}', '${docSnap.id}')">Edit</button>
+                            <button onclick="deletePromotion('${empId}', '${docSnap.id}')">Delete</button>
+                        </td>`;
+                    promotionTable.appendChild(row);
+                });
+            });
+        }
+
+        window.editPromotion = (empId, promotionId) => {
+            const promotionRef = doc(db, "employees", empId, "promotions", promotionId);
+            onSnapshot(promotionRef, (docSnap) => {
+                const pr = docSnap.data();
+                document.getElementById("promotionTitle").value = pr.title;
+                document.getElementById("promotionDate").value = pr.date;
+                document.getElementById("promotionId").value = promotionId;
+            });
+        };
+
+        window.deletePromotion = async (empId, promotionId) => {
+            if (confirm("Delete this promotion record?")) await deleteDoc(doc(db, "employees", empId, "promotions", promotionId));
+        };
+    </script>
+</body>
+</html>
